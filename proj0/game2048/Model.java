@@ -139,7 +139,8 @@ public class Model extends Observable {
     public static boolean emptySpaceExists(Board b) {
         for (int row = 0; row < b.size(); row += 1) {
             for (int col = 0; col < b.size(); col += 1) {
-                if (b.tile(row, col) == null) {
+                Tile t = b.tile(col, row);
+                if (b.tile(col, row) == null) {
                     return true;
                 }
             }
@@ -155,7 +156,7 @@ public class Model extends Observable {
     public static boolean maxTileExists(Board b) {
         for (int row = 0; row < b.size(); row += 1) {
             for (int col = 0; col < b.size(); col += 1) {
-                Tile tile = b.tile(row, col);
+                Tile tile = b.tile(col, row);
                 if (tile != null && tile.value() == MAX_PIECE) {
                     return true;
                 }
@@ -171,7 +172,42 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        int[] horizontal = new int[2];
+        int[] vertical = new int[2];
+        // 1. There is at least one empty space on the board.
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+
+        // 2. Test to see if there are two adjacent tiles with the same value.
+        for (int row = 0; row < b.size(); row += 1) {
+            for (int col = 0; col < b.size(); col += 1) {
+                // Check index positions for every direction.
+                Tile current_tile = b.tile(col, row);
+                horizontal[0] = col - 1;
+                horizontal[1] = col + 1;
+                vertical[0] = row + 1;
+                vertical[1] = row - 1;
+
+                for (int j : horizontal) {
+                    if (j >= 0 && j < b.size()) {
+                        Tile t = b.tile(j, row);
+                        if (current_tile.value() == t.value()) {
+                            return true;
+                        }
+                    }
+                }
+
+                for (int j: vertical) {
+                    if (j >= 0 && j < b.size()) {
+                        Tile t = b.tile(col, j);
+                        if (current_tile.value() == t.value()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
         return false;
     }
 
