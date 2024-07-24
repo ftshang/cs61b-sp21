@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Frank Shang
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -16,6 +16,7 @@ public class Model extends Observable {
     private int maxScore;
     /** True iff game is ended. */
     private boolean gameOver;
+
 
     /* Coordinate System: column C, row R of the board (where row 0,
      * column 0 is the lower-left corner of the board) will correspond
@@ -110,15 +111,70 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
-        // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+
+        board.setViewingPerspective(side);
+
+        // Check each column.
+        for (int col = 0; col < board.size(); col += 1) {
+            boolean[] mergedColumn = new boolean[board.size()];
+            for (int row = 3; row >= 0; row -= 1) {
+                Tile t = board.tile(col, row);
+                if (t == null) {
+                    continue;
+                }
+                int endingRow = getRowDestination(col, row, t.value(), mergedColumn);
+                if (endingRow != row) {
+                    mergedColumn[endingRow] = board.move(col, endingRow, t);
+                    if (mergedColumn[endingRow]) {
+                        score += board.tile(col, endingRow).value();
+                    }
+                    changed = true;
+                }
+            }
+        }
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
+
+        board.setViewingPerspective(Side.NORTH);
+
         return changed;
+    }
+
+    private int getRowDestination(int col, int row, int value, boolean[] merged) {
+        int next_row = row + 1;
+
+        if (next_row >= board.size()) {
+            return row;
+        }
+
+        Tile current_tile = board.tile(col, next_row);
+        while (current_tile == null) {
+            if (next_row == board.size() - 1) {
+                return next_row;
+            }
+            next_row += 1;
+            current_tile = board.tile(col, next_row);
+        }
+
+        // Check whether the tile's value is equal and whether the tile has already been merged.
+        if (current_tile.value() == value && !merged[next_row]) {
+            return next_row;
+        } else {
+            return next_row - 1;
+        }
+    }
+
+
+    private boolean outOfBounds(int row) {
+        return row >= board.size() || row < 0;
+    }
+    private boolean emptySpaceAboveRow(int col, int row) {
+        return board.tile(col, row) == null;
     }
 
     /** Checks if the game is over and sets the gameOver variable
